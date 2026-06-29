@@ -77,6 +77,9 @@ export default function SettingsPage() {
   const [showResetDone, setShowResetDone] = useState(false);
   const [hapticFeedback, setHapticFeedback] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
+  const [updateStatus, setUpdateStatus] = useState<"idle" | "checking" | "up-to-date" | "available" | "error">("idle");
+  const [updateVersion, setUpdateVersion] = useState("");
+  const [updateNotes, setUpdateNotes] = useState("");
 
   useEffect(() => {
     document.documentElement.style.setProperty(
@@ -405,6 +408,68 @@ export default function SettingsPage() {
         </button>
       </motion.div>
 
+      {/* App Updates */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/50 p-6"
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <HiOutlineCog className="w-5 h-5 text-[var(--accent)]" />
+          <h2 className="font-semibold text-gray-900 dark:text-white">{t("settings.appUpdates") || "App Updates"}</h2>
+        </div>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 dark:text-gray-400">{t("settings.currentVersion") || "Current Version"}</span>
+            <span className="text-gray-900 dark:text-white font-medium">1.0.2</span>
+          </div>
+          <button
+            onClick={async () => {
+              setUpdateStatus("checking");
+              try {
+                const res = await fetch("https://api.github.com/repos/Itskeer/quran-companion/releases/latest");
+                const data = await res.json();
+                const latest = data.tag_name?.replace("v", "") || "";
+                if (latest && latest !== "1.0.2") {
+                  setUpdateStatus("available");
+                  setUpdateVersion(latest);
+                  setUpdateNotes(data.body || "");
+                } else {
+                  setUpdateStatus("up-to-date");
+                }
+              } catch {
+                setUpdateStatus("error");
+              }
+            }}
+            disabled={updateStatus === "checking"}
+            className="w-full py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50"
+          >
+            {updateStatus === "checking" ? (t("settings.checking") || "Checking...") : (t("settings.checkForUpdates") || "Check for Updates")}
+          </button>
+          {updateStatus === "up-to-date" && (
+            <p className="text-sm text-emerald-500 text-center">{t("settings.upToDate") || "You're up to date!"}</p>
+          )}
+          {updateStatus === "available" && (
+            <div className="space-y-2">
+              <p className="text-sm text-blue-500 text-center">{t("settings.updateAvailable") || `Update v${updateVersion} available!`}</p>
+              {updateNotes && <p className="text-xs text-gray-400 dark:text-gray-500 text-center">{updateNotes}</p>}
+              <a
+                href="https://github.com/Itskeer/quran-companion/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-2.5 rounded-xl bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors text-center"
+              >
+                {t("settings.downloadUpdate") || "Download Update"}
+              </a>
+            </div>
+          )}
+          {updateStatus === "error" && (
+            <p className="text-sm text-red-500 text-center">{t("settings.updateError") || "Failed to check for updates"}</p>
+          )}
+        </div>
+      </motion.div>
+
       {/* About */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -426,7 +491,7 @@ export default function SettingsPage() {
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-gray-400">{t("settings.version")}</span>
             <span className="text-gray-900 dark:text-white font-medium">
-              1.0.0
+              1.0.2
             </span>
           </div>
           <div className="flex justify-between">
