@@ -1,10 +1,9 @@
 import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
 import type { MenuItemConstructorOptions } from 'electron';
-import { app, MenuItem, dialog } from 'electron';
+import { app, MenuItem } from 'electron';
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
-import { autoUpdater } from 'electron-updater';
 
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
 
@@ -36,54 +35,11 @@ if (electronIsDev) {
   setupReloadWatcher(myCapacitorApp);
 }
 
-// Auto-updater
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = true;
-
-autoUpdater.on('update-available', (info) => {
-  const win = myCapacitorApp.getMainWindow();
-  if (!win || win.isDestroyed()) return;
-  dialog.showMessageBox(win, {
-    type: 'info',
-    title: 'Update Available',
-    message: `A new version (v${info.version}) is available. Do you want to download and install it now?`,
-    buttons: ['Download & Restart', 'Later'],
-    defaultId: 0,
-    cancelId: 1,
-  }).then(({ response }) => {
-    if (response === 0) {
-      autoUpdater.downloadUpdate();
-    }
-  });
-});
-
-autoUpdater.on('update-downloaded', () => {
-  const win = myCapacitorApp.getMainWindow();
-  if (!win || win.isDestroyed()) return;
-  dialog.showMessageBox(win, {
-    type: 'info',
-    title: 'Update Ready',
-    message: 'The update has been downloaded. The app will restart to apply it.',
-    buttons: ['Restart Now', 'Later'],
-    defaultId: 0,
-    cancelId: 1,
-  }).then(({ response }) => {
-    if (response === 0) {
-      autoUpdater.quitAndInstall();
-    }
-  });
-});
-
-autoUpdater.on('error', (err) => {
-  console.error('Auto-updater error:', err.message);
-});
-
 // Run Application
 (async () => {
   await app.whenReady();
   setupContentSecurityPolicy(myCapacitorApp.getCustomURLScheme());
   await myCapacitorApp.init();
-  autoUpdater.checkForUpdates().catch(() => {});
 })();
 
 // Handle when all of our windows are close (platforms have their own expectations).

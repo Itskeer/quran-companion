@@ -11,12 +11,6 @@
     "capacitor.config.*",
     "app/**/*"
   ],
-  "publish": {
-    "provider": "github",
-    "owner": "Itskeer",
-    "repo": "quran-companion",
-    "releaseType": "release"
-  },
 
   "nsis": {
     "allowElevation": true,
